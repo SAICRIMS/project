@@ -7,6 +7,17 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <!-- DataTables CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.1/css/jquery.dataTables.min.css">
+<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.3.6/css/buttons.dataTables.min.css">
+
+<!-- DataTables and Export Buttons JS -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.1/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.3.6/js/dataTables.buttons.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.1.3/jszip.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.html5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.3.6/js/buttons.print.min.js"></script>
 </head>
 <body class="font-sans bg-gray-100">
 <div id="app">
@@ -38,33 +49,6 @@
 
     <!-- Main Content -->
     <main class="ml-64 p-8">
-        <!-- Dashboard -->
-       <div id="Dashboard-section" class="hidden">
-	<div id="dashboard" class="p-8">
-    <h2 class="text-3xl font-bold mb-6">Dashboard</h2>
-
-    <!-- Counters -->
-    <div class="grid grid-cols-3 gap-4 mb-8">
-        <div class="bg-blue-100 p-4 rounded shadow">
-            <h3 class="text-xl font-bold text-blue-600">Total Chemicals</h3>
-            <p id="total-chemicals" class="text-2xl font-semibold">0</p>
-        </div>
-        <div class="bg-green-100 p-4 rounded shadow">
-            <h3 class="text-xl font-bold text-green-600">Issued Chemicals</h3>
-            <p id="issued-chemicals" class="text-2xl font-semibold">0</p>
-        </div>
-        <div class="bg-red-100 p-4 rounded shadow">
-            <h3 class="text-xl font-bold text-red-600">Decomposed Chemicals</h3>
-            <p id="decomposed-chemicals" class="text-2xl font-semibold">0</p>
-        </div>
-    </div>
-
-    <!-- Graph -->
-    <div>
-        <canvas id="chemical-chart" width="400" height="200"></canvas>
-    </div>
-</div>
-</div>
         <!-- Stock Report -->
         <div id="stock-report-section" class="hidden">
     <h2 class="text-2xl font-bold mb-6">Stock Report</h2>
@@ -84,30 +68,29 @@
         <button onclick="exportStockData()" class="bg-green-600 text-white px-4 py-2 rounded ml-2">Export</button>
     </div>
 
-    <table class="min-w-full bg-white">
-        <thead>
+   <table id="stockReportTable" class="display nowrap" style="width:100%">
+    <thead>
         <tr>
-            <th class="py-2 px-4 border-b">SR NO</th>
-            <th class="py-2 px-4 border-b">BAR_CODE</th>
-            <th class="py-2 px-4 border-b">AVL_QTY</th>
-            <th class="py-2 px-4 border-b">TARE_VAIL</th>
-            <th class="py-2 px-4 border-b">GROSS_QTY</th>
-            <th class="py-2 px-4 border-b">UNIT</th>
-            <th class="py-2 px-4 border-b">CAS_ID</th>
-            <th class="py-2 px-4 border-b">SMILES</th>
-            <th class="py-2 px-4 border-b">PROJECT_CODE</th>
-            <th class="py-2 px-4 border-b">LOCATION</th>
-            <th class="py-2 px-4 border-b">VENDOR_NAME</th>
-            <th class="py-2 px-4 border-b">LAB_CODE</th>
-            <th class="py-2 px-4 border-b">CHEMICAL_NAME</th>
-            <th class="py-2 px-4 border-b">ITEM_CODE</th>
-            <th class="py-2 px-4 border-b">ACTION</th>
+            <th>SR NO</th>
+            <th>BAR_CODE</th>
+            <th>AVL_QTY</th>
+            <th>TARE_VAIL</th>
+            <th>GROSS_QTY</th>
+            <th>UNIT</th>
+            <th>CAS_ID</th>
+            <th>SMILES</th>
+            <th>PROJECT_CODE</th>
+            <th>LOCATION</th>
+            <th>VENDOR_NAME</th>
+            <th>LAB_CODE</th>
+            <th>CHEMICAL_NAME</th>
+            <th>ITEM_CODE</th>
         </tr>
-        </thead>
-        <tbody id="stock-report-body">
-            <!-- Rows dynamically added here -->
-        </tbody>
-    </table>
+    </thead>
+    <tbody id="stock-report-body">
+        <!-- Rows will be dynamically added -->
+    </tbody>
+</table>
 </div>
 
         <!-- Issue Chemical -->
@@ -220,31 +203,26 @@
         <button onclick="exportFilteredIssueReport()" class="ml-4 bg-green-600 text-white px-4 py-2 rounded">Export to Excel</button>
     </div>
     <button onclick="exportIssueReport()" class="bg-green-600 text-white px-4 py-2 rounded mt-4">Export Issue Report</button>
-    <table class="min-w-full bg-white mt-4">
-        <thead>
+   <table id="issueReportTable" class="display nowrap" style="width:100%">
+    <thead>
         <tr>
-            <th class="py-2 px-4 border-b">BAR_CODE</th>
-            <th class="py-2 px-4 border-b">EMP_ID</th>
-            <th class="py-2 px-4 border-b">CAS_ID</th>
-            <th class="py-2 px-4 border-b">CHEMICAL_NAME</th>
-            <th class="py-2 px-4 border-b">VENDOR_NAME</th>
-            <th class="py-2 px-4 border-b">REQ_LAB_CODE</th>
-            <th class="py-2 px-4 border-b">REQ_PROJECT_CODE</th>
-            <th class="py-2 px-4 border-b">ISSUE_TO</th>
-            <th class="py-2 px-4 border-b">ISSUE_DATE</th>
-            <th class="py-2 px-4 border-b">STOCK_PROJECT</th>
-            <th class="py-2 px-4 border-b">ITEM_CODE</th>
-            <th class="py-2 px-4 border-b">USER_COMMENT</th>
-            <th class="py-2 px-4 border-b">ISSUE_QTY</th>
-            <th class="py-2 px-4 border-b">CONSUMED_QTY</th>
-            <th class="py-2 px-4 border-b">AVL_QTY</th>
-            <th class="py-2 px-4 border-b">UNIT</th>
+            <th>BAR_CODE</th>
+            <th>EMP_ID</th>
+            <th>CAS_ID</th>
+            <th>CHEMICAL_NAME</th>
+            <th>VENDOR_NAME</th>
+            <th>REQ_LAB_CODE</th>
+            <th>REQ_PROJECT_CODE</th>
+            <th>ISSUE_TO</th>
+            <th>ISSUE_DATE</th>
+            <th>AVL_QTY</th>
+            <th>UNIT</th>
         </tr>
-        </thead>
-        <tbody id="filtered-issue-report-body">
-            <!-- Filtered rows dynamically added here -->
-        </tbody>
-    </table>
+    </thead>
+    <tbody id="issue-report-body">
+        <!-- Rows will be dynamically added -->
+    </tbody>
+</table>
 </div>
 <div id="admin-panel-section" class="hidden">
     <h2 class="text-2xl font-bold mb-6">Admin Control Panel</h2>
@@ -438,30 +416,30 @@ function displayUsers() {
 </div>
                 <h2 class="text-2xl font-bold mb-6">Decompose Report</h2>
             <button onclick="exportDecomposeData()" class="bg-green-600 text-white px-4 py-2 rounded ml-2">Export to Excel</button>
-    <table class="min-w-full bg-white mt-4">  
-                <thead>
-                <tr>
-                    <th class="py-2 px-4 border-b">BAR_CODE</th>
-                    <th class="py-2 px-4 border-b">AVL_QTY</th>
-                    <th class="py-2 px-4 border-b">TARE_VAIL</th>
-                    <th class="py-2 px-4 border-b">GROSS_QTY</th>
-                    <th class="py-2 px-4 border-b">UNIT</th>
-                    <th class="py-2 px-4 border-b">CAS_ID</th>
-                    <th class="py-2 px-4 border-b">SMILES</th>
-                    <th class="py-2 px-4 border-b">PROJECT_CODE</th>
-                    <th class="py-2 px-4 border-b">LOCATION</th>
-                    <th class="py-2 px-4 border-b">VENDOR_NAME</th>
-                    <th class="py-2 px-4 border-b">LAB_CODE</th>
-                    <th class="py-2 px-4 border-b">CHEMICAL_NAME</th>
-                    <th class="py-2 px-4 border-b">ITEM_CODE</th>
-                    <th class="py-2 px-4 border-b">DECOMPOSE_COMMENT</th>
-                    <th class="py-2 px-4 border-b">DECOMPOSE_DATE</th>
-                </tr>
-                </thead>
-                <tbody id="decompose-report-body">
-                    <!-- Rows will be dynamically added here -->
-                </tbody>
-            </table>
+    <table id="decomposeReportTable" class="display nowrap" style="width:100%">
+    <thead>
+        <tr>
+            <th>BAR_CODE</th>
+            <th>AVL_QTY</th>
+            <th>TARE_VAIL</th>
+            <th>GROSS_QTY</th>
+            <th>UNIT</th>
+            <th>CAS_ID</th>
+            <th>SMILES</th>
+            <th>PROJECT_CODE</th>
+            <th>LOCATION</th>
+            <th>VENDOR_NAME</th>
+            <th>LAB_CODE</th>
+            <th>CHEMICAL_NAME</th>
+            <th>ITEM_CODE</th>
+            <th>DECOMPOSE_COMMENT</th>
+            <th>DECOMPOSE_DATE</th>
+        </tr>
+    </thead>
+    <tbody id="decompose-report-body">
+        <!-- Rows will be dynamically added -->
+    </tbody>
+</table>
         </div>
     </main>
 </div>
@@ -484,59 +462,58 @@ function displayUsers() {
     let issueReport = [];
 
     function handleStockUpload() {
-    const file = document.getElementById('stock-upload').files[0];
-    const reader = new FileReader();
+        const file = document.getElementById('stock-upload').files[0];
+        const reader = new FileReader();
 
-    reader.onload = function (e) {
-        const data = new Uint8Array(e.target.result);
-        const workbook = XLSX.read(data, { type: 'array' });
-        const sheetName = workbook.SheetNames[0];
-        const sheet = workbook.Sheets[sheetName];
-        const stockData = XLSX.utils.sheet_to_json(sheet);
+        reader.onload = function (e) {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const sheetName = workbook.SheetNames[0];
+            const sheet = workbook.Sheets[sheetName];
+            stockData = XLSX.utils.sheet_to_json(sheet);
+            console.log('Stock Data Loaded:', stockData);
+        };
 
-        // Save stock data to localStorage
-        localStorage.setItem('stockData', JSON.stringify(stockData));
-
-        alert('Stock Data Uploaded!');
-        updateDashboard(); // Refresh dashboard
-    };
-
-    if (file) {
-        reader.readAsArrayBuffer(file);
+        if (file) {
+            reader.readAsArrayBuffer(file);
+        }
     }
+
+   function loadStockData() {
+    const tbody = document.getElementById('stock-report-body');
+    tbody.innerHTML = ''; // Clear existing rows
+
+    stockData.forEach((item, index) => {
+        const row = `
+            <tr>
+                <td>${index + 1}</td>
+                <td>${item.BAR_CODE}</td>
+                <td>${item.AVL_QTY}</td>
+                <td>${item.TARE_VAIL}</td>
+                <td>${item.GROSS_QTY}</td>
+                <td>${item.UNIT}</td>
+                <td>${item.CAS_ID}</td>
+                <td>${item.SMILES}</td>
+                <td>${item.PROJECT_CODE}</td>
+                <td>${item.LOCATION}</td>
+                <td>${item.VENDOR_NAME}</td>
+                <td>${item.LAB_CODE}</td>
+                <td>${item.CHEMICAL_NAME}</td>
+                <td>${item.ITEM_CODE}</td>
+            </tr>
+        `;
+        tbody.insertAdjacentHTML('beforeend', row);
+    });
+
+    $('#stockReportTable').DataTable().clear().destroy(); // Reinitialize DataTable
+    $('#stockReportTable').DataTable({
+        responsive: true,
+        dom: 'Bfrtip',
+        buttons: ['copy', 'csv', 'excel', 'pdf', 'print'],
+        pageLength: 10,
+        order: [[0, 'asc']]
+    });
 }
-
-    function loadStockData() {
-        const tbody = document.getElementById('stock-report-body');
-        tbody.innerHTML = ''; // Clear existing rows
-
-        stockData.forEach((item, index) => {
-            const row = document.createElement('tr');
-
-            const values = [
-                index + 1,
-                item.BAR_CODE,
-                item.AVL_QTY,
-                item.TARE_VAIL,
-                item.GROSS_QTY,
-                item.UNIT,
-                item.CAS_ID,
-                item.SMILES,
-                item.PROJECT_CODE,
-                item.LOCATION,
-                item.VENDOR_NAME,
-                item.LAB_CODE,
-                item.CHEMICAL_NAME,
-                item.ITEM_CODE
-            ];
-
-            values.forEach(value => {
-                const cell = document.createElement('td');
-                cell.className = 'py-2 px-4 border-b';
-                cell.textContent = value;
-                row.appendChild(cell);
-            });
-
             // Action Button: Decompose
             const actionCell = document.createElement('td');
             actionCell.className = 'py-2 px-4 border-b';
@@ -640,43 +617,45 @@ function displayUsers() {
             // Optionally, refresh the decompose report section
             updateDecomposeReport();
             alert('Chemical successfully decomposed and moved to Decompose Report!');
- updateDashboard();
         }
     }
  function updateDecomposeReport() {
-        const tbody = document.getElementById('decompose-report-body');
-        tbody.innerHTML = '';
+    const tbody = document.getElementById('decompose-report-body');
+    tbody.innerHTML = ''; // Clear existing rows
 
-        decomposeData.forEach((item, index) => {
-            const row = document.createElement('tr');
-            const values = [
-                item.BAR_CODE,
-                item.AVL_QTY,
-                item.TARE_VAIL,
-                item.GROSS_QTY,
-                item.UNIT,
-                item.CAS_ID,
-                item.SMILES,
-                item.PROJECT_CODE,
-                item.LOCATION,
-                item.VENDOR_NAME,
-                item.LAB_CODE,
-                item.CHEMICAL_NAME,
-                item.ITEM_CODE,
-                item.DECOMPOSE_COMMENT,
-                item.DECOMPOSE_DATE
-            ];
+    decomposeData.forEach((item) => {
+        const row = `
+            <tr>
+                <td>${item.BAR_CODE}</td>
+                <td>${item.AVL_QTY}</td>
+                <td>${item.TARE_VAIL}</td>
+                <td>${item.GROSS_QTY}</td>
+                <td>${item.UNIT}</td>
+                <td>${item.CAS_ID}</td>
+                <td>${item.SMILES}</td>
+                <td>${item.PROJECT_CODE}</td>
+                <td>${item.LOCATION}</td>
+                <td>${item.VENDOR_NAME}</td>
+                <td>${item.LAB_CODE}</td>
+                <td>${item.CHEMICAL_NAME}</td>
+                <td>${item.ITEM_CODE}</td>
+                <td>${item.DECOMPOSE_COMMENT}</td>
+                <td>${item.DECOMPOSE_DATE}</td>
+            </tr>
+        `;
+        tbody.insertAdjacentHTML('beforeend', row);
+    });
 
-            values.forEach(value => {
-                const cell = document.createElement('td');
-                cell.className = 'py-2 px-4 border-b';
-                cell.textContent = value;
-                row.appendChild(cell);
-            });
+    $('#decomposeReportTable').DataTable().clear().destroy();
+    $('#decomposeReportTable').DataTable({
+        responsive: true,
+        dom: 'Bfrtip',
+        buttons: ['copy', 'csv', 'excel', 'pdf', 'print'],
+        pageLength: 10,
+        order: [[14, 'desc']]
+    });
+}
 
-            tbody.appendChild(row);
-        });
-    }
 
     // Handling Chemical Issue
     function handleIssueChemical(event) {
@@ -701,7 +680,7 @@ function displayUsers() {
         AVL_QTY: parseFloat(document.getElementById('avl-qty').value) || 0,
         UNIT: document.getElementById('unit').value
     };
-updateDashboard();
+
     // Validation
     if (!issueData.BAR_CODE || !issueData.EMP_ID || issueData.ISSUE_QTY <= 0) {
         alert('Please fill all required fields and ensure issue quantity is greater than zero.');
@@ -724,37 +703,38 @@ updateDashboard();
     alert('Chemical successfully issued!');
 }
 
-   function updateIssueReport() {
-    const tbody = document.getElementById('filtered-issue-report-body');
+  function updateIssueReport() {
+    const tbody = document.getElementById('issue-report-body');
     tbody.innerHTML = ''; // Clear existing rows
 
-    issueReport.forEach((item, index) => {
-        const row = document.createElement('tr');
-        const values = [
-            item.BAR_CODE,
-            item.EMP_ID,
-            item.CAS_ID,
-            item.CHEMICAL_NAME,
-            item.VENDOR_NAME,
-            item.REQ_LAB_CODE,
-            item.REQ_PROJECT_CODE,
-            item.ISSUE_TO,
-            item.ISSUE_DATE,
-            item.STOCK_PROJECT,
-            item.ITEM_CODE,
-            item.USER_COMMENT,
-            item.ISSUE_QTY,
-            item.CONSUMED_QTY,
-            item.AVL_QTY,
-            item.UNIT
-        ];
+    issueReport.forEach((item) => {
+        const row = `
+            <tr>
+                <td>${item.BAR_CODE}</td>
+                <td>${item.EMP_ID}</td>
+                <td>${item.CAS_ID}</td>
+                <td>${item.CHEMICAL_NAME}</td>
+                <td>${item.VENDOR_NAME}</td>
+                <td>${item.REQ_LAB_CODE}</td>
+                <td>${item.REQ_PROJECT_CODE}</td>
+                <td>${item.ISSUE_TO}</td>
+                <td>${item.ISSUE_DATE}</td>
+                <td>${item.AVL_QTY}</td>
+                <td>${item.UNIT}</td>
+            </tr>
+        `;
+        tbody.insertAdjacentHTML('beforeend', row);
+    });
 
-        values.forEach(value => {
-            const cell = document.createElement('td');
-            cell.className = 'py-2 px-4 border-b';
-            cell.textContent = value;
-            row.appendChild(cell);
-        });
+    $('#issueReportTable').DataTable().clear().destroy();
+    $('#issueReportTable').DataTable({
+        responsive: true,
+        dom: 'Bfrtip',
+        buttons: ['copy', 'csv', 'excel', 'pdf', 'print'],
+        pageLength: 10,
+        order: [[8, 'desc']]
+    });
+}
 
 
         // Add Action Buttons
@@ -1318,70 +1298,34 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('users', JSON.stringify([{ username: 'admin', password: 'admin' }]));
     }
 });
-// Global variables for tracking counts
-let totalChemicals = 0;
-let issuedChemicals = 0;
-let decomposedChemicals = 0;
+$(document).ready(function () {
+    // Initialize DataTables for Stock Report
+    $('#stockReportTable').DataTable({
+        responsive: true,
+        dom: 'Bfrtip',
+        buttons: ['copy', 'csv', 'excel', 'pdf', 'print'],
+        pageLength: 10,
+        order: [[0, 'asc']]
+    });
 
-// Chart instance
-let chemicalChart;
+    // Initialize DataTables for Issue Report
+    $('#issueReportTable').DataTable({
+        responsive: true,
+        dom: 'Bfrtip',
+        buttons: ['copy', 'csv', 'excel', 'pdf', 'print'],
+        pageLength: 10,
+        order: [[8, 'desc']] // Default sorting by ISSUE_DATE
+    });
 
-// Function to update dashboard counters and graph
-function updateDashboard() {
-    const stockData = JSON.parse(localStorage.getItem('stockData')) || [];
-    const issueReport = JSON.parse(localStorage.getItem('issueReport')) || [];
-    const decomposeData = JSON.parse(localStorage.getItem('decomposeData')) || [];
-
-    totalChemicals = stockData.length;
-    issuedChemicals = issueReport.length;
-    decomposedChemicals = decomposeData.length;
-
-    // Update counters
-    document.getElementById('total-chemicals').textContent = totalChemicals;
-    document.getElementById('issued-chemicals').textContent = issuedChemicals;
-    document.getElementById('decomposed-chemicals').textContent = decomposedChemicals;
-
-    // Update graph
-    updateGraph();
-}
-
-// Function to initialize and update the graph
-function updateGraph() {
-    const ctx = document.getElementById('chemical-chart').getContext('2d');
-
-    const data = {
-        labels: ['Total', 'Issued', 'Decomposed'],
-        datasets: [{
-            label: 'Chemical Data',
-            data: [totalChemicals, issuedChemicals, decomposedChemicals],
-            backgroundColor: ['#3B82F6', '#10B981', '#EF4444']
-        }]
-    };
-
-    const config = {
-        type: 'bar',
-        data: data,
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    display: false
-                }
-            }
-        }
-    };
-
-    // Destroy previous chart instance if it exists
-    if (chemicalChart) {
-        chemicalChart.destroy();
-    }
-
-    chemicalChart = new Chart(ctx, config);
-}
-
-// Call updateDashboard on page load
-document.addEventListener('DOMContentLoaded', updateDashboard);
+    // Initialize DataTables for Decompose Report
+    $('#decomposeReportTable').DataTable({
+        responsive: true,
+        dom: 'Bfrtip',
+        buttons: ['copy', 'csv', 'excel', 'pdf', 'print'],
+        pageLength: 10,
+        order: [[14, 'desc']] // Default sorting by DECOMPOSE_DATE
+    });
+});
 </script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </body>
 </html>
