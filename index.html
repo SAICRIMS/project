@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Chemical Management System</title>
+
+    <!-- Favicon Link -->
+   <link rel="icon" type="image/png" href="A_clean,_professional_and_visually_appealing_favic.png">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(to right, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.9)), 
+                        url('./A_visually_appealing_background_featuring_a_labora.png') no-repeat center center fixed;
+            background-size: cover;
+        }
+        .login-container {
+            display: flex;
+            background: white;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+            max-width: 900px;
+            width: 100%;
+        }
+        .login-image {
+            flex: 1;
+            background: url('./A_visually_appealing_background_featuring_a_labora.png') no-repeat center center;
+            background-size: cover;
+        }
+        .login-form {
+            flex: 1;
+            padding: 32px;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-image"></div>
+        <div class="login-form">
+            <h1 class="text-2xl font-bold text-center text-gray-800 mb-6">Chemical Management System</h1>
+            <form id="login-form" onsubmit="handleLogin(event)">
+                <div class="mb-4">
+                    <label for="username" class="block text-gray-700 font-semibold mb-2">Username</label>
+                    <input type="text" id="username" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter your username" required>
+                </div>
+                <div class="mb-4">
+                    <label for="password" class="block text-gray-700 font-semibold mb-2">Password</label>
+                    <input type="password" id="password" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter your password" required>
+                </div>
+                <div class="mb-6">
+                    <button type="submit" class="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">Login</button>
+                </div>
+            </form>
+            <p class="text-center text-gray-600 text-sm">&copy; 2025 Chemical Management System</p>
+        </div>
+    </div>
+
+    <script>
+        const users = JSON.parse(localStorage.getItem('users')) || [
+            { username: 'admin', password: 'admin' } // Default admin user if no users exist
+        ];
+
+        function handleLogin(event) {
+            event.preventDefault(); // Prevent form submission
+
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            // Find the user in the localStorage array
+            const user = users.find(u => u.username === username && u.password === password);
+
+            if (user) {
+                alert("Login successful!");
+                window.location.href = "test2025.html"; // Redirect to main application
+            } else {
+                alert("Invalid username or password!");
+            }
+        }
+    </script>
+</body>
+</html>

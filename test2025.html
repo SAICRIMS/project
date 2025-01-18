@@ -1,0 +1,1249 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chemical Management System</title>
+    <link rel="icon" type="image/png" href="A_clean,_professional_and_visually_appealing_favic.png">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+</head>
+<body class="font-sans bg-gray-100">
+<div id="app">
+    <div class="flex justify-between items-center mb-4 bg-blue-600 text-white px-6 py-4 rounded-lg shadow-md fixed w-full z-10">
+    <h1 class="text-2xl font-bold">Chemical & Reagent Inventory Management System</h1>
+    <button onclick="logout()" class="bg-red-700 text-white px-4 py-2 rounded hover:bg-red-800">
+        Logout
+    </button>
+</div>
+<!-- Main Content -->
+    <main class="pt-15 p-6"> <!-- Ensure padding-top matches header height -->
+    </main>
+</body>
+</html>
+
+    <!-- Sidebar -->
+    <aside class="w-64 bg-blue-900 text-white min-h-screen fixed">
+        <div class="p-4 text-center border-b border-blue-700">
+        </div>
+        <nav class="p-4">
+             <button class="block py-2.5 px-4 rounded hover:bg-blue-700 w-full text-left" onclick="navigate('Dashboard-section')">Dashboard </button>
+            <button class="block py-2.5 px-4 rounded hover:bg-blue-700 w-full text-left" onclick="navigate('stock-report-section')">Stock Report</button>
+            <button class="block py-2.5 px-4 rounded hover:bg-blue-700 w-full text-left" onclick="navigate('issue-chemical-section')">Issue Chemical</button>
+            <button class="block py-2.5 px-4 rounded hover:bg-blue-700 w-full text-left" onclick="navigate('issue-report-section')">Issue Report</button>
+            <button class="block py-2.5 px-4 rounded hover:bg-blue-700 w-full text-left" onclick="navigate('decompose-report-section')">Decompose Report</button>
+            <button class="block py-2.5 px-4 rounded hover:bg-blue-700 w-full text-left" onclick="navigate('admin-panel-section')">Admin Control Panel</button>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="ml-64 p-8">
+        <!-- Stock Report -->
+        <div id="stock-report-section" class="hidden">
+    <h2 class="text-2xl font-bold mb-6">Stock Report</h2>
+    <input type="file" id="stock-upload" class="mb-4 block" accept=".xlsx, .xls" onchange="handleStockUpload()">
+    <button onclick="loadStockData()" class="bg-blue-600 text-white px-4 py-2 rounded mb-4">Submit</button>
+
+    <div class="mb-4 flex items-center">
+        <label for="search-category" class="mr-2 font-semibold">Search By</label>
+        <select id="search-category" class="w-1/4 border px-3 py-2">
+            <option value="CAS_ID">CAS_ID</option>
+            <option value="BAR_CODE">BAR_CODE</option>
+            <option value="PROJECT_CODE">PROJECT_CODE</option>
+        </select>
+        <input type="text" id="search-input" class="w-1/3 border px-3 py-2 ml-2" placeholder="Enter Search Value">
+        <button onclick="searchStockReport()" class="bg-blue-600 text-white px-4 py-2 rounded ml-2">Search</button>
+        <button onclick="resetStockSearch()" class="bg-red-600 text-white px-4 py-2 rounded ml-2">Reset</button>
+        <button onclick="exportStockData()" class="bg-green-600 text-white px-4 py-2 rounded ml-2">Export</button>
+    </div>
+
+    <table class="min-w-full bg-white">
+        <thead>
+        <tr>
+            <th class="py-2 px-4 border-b">SR NO</th>
+            <th class="py-2 px-4 border-b">BAR_CODE</th>
+            <th class="py-2 px-4 border-b">AVL_QTY</th>
+            <th class="py-2 px-4 border-b">TARE_VAIL</th>
+            <th class="py-2 px-4 border-b">GROSS_QTY</th>
+            <th class="py-2 px-4 border-b">UNIT</th>
+            <th class="py-2 px-4 border-b">CAS_ID</th>
+            <th class="py-2 px-4 border-b">SMILES</th>
+            <th class="py-2 px-4 border-b">PROJECT_CODE</th>
+            <th class="py-2 px-4 border-b">LOCATION</th>
+            <th class="py-2 px-4 border-b">VENDOR_NAME</th>
+            <th class="py-2 px-4 border-b">LAB_CODE</th>
+            <th class="py-2 px-4 border-b">CHEMICAL_NAME</th>
+            <th class="py-2 px-4 border-b">ITEM_CODE</th>
+            <th class="py-2 px-4 border-b">ACTION</th>
+        </tr>
+        </thead>
+        <tbody id="stock-report-body">
+            <!-- Rows dynamically added here -->
+        </tbody>
+    </table>
+</div>
+
+        <!-- Issue Chemical -->
+        <div id="issue-chemical-section" class="hidden">
+            <h2 class="text-2xl font-bold mb-6">Issue Chemical</h2>
+            <form id="issue-chemical-form" onsubmit="handleIssueChemical(event)">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label for="barcode" class="block text-gray-700">BAR_CODE</label>
+                        <input type="text" id="barcode" class="w-full border px-3 py-2" onchange="populateIssueFields()">
+                    </div>
+                    <div>
+                        <label for="emp-id" class="block text-gray-700">EMP_ID</label>
+                        <input type="text" id="emp-id" class="w-full border px-3 py-2" required>
+                    </div>
+                    <div>
+                        <label for="cas-id" class="block text-gray-700">CAS_ID</label>
+                        <input type="text" id="cas-id" class="w-full border px-3 py-2" readonly>
+                    </div>
+                    <div>
+                        <label for="chemical-name" class="block text-gray-700">CHEMICAL_NAME</label>
+                        <input type="text" id="chemical-name" class="w-full border px-3 py-2" readonly>
+                    </div>
+                    <div>
+                        <label for="vendor-name" class="block text-gray-700">VENDOR_NAME</label>
+                        <input type="text" id="vendor-name" class="w-full border px-3 py-2" readonly>
+                    </div>
+                    <div>
+                        <label for="req-lab-code" class="block text-gray-700">REQ_LAB_CODE</label>
+                        <input type="text" id="req-lab-code" class="w-full border px-3 py-2" required>
+                    </div>
+                    <div>
+                        <label for="req-project-code" class="block text-gray-700">REQ_PROJECT_CODE</label>
+                        <input type="text" id="req-project-code" class="w-full border px-3 py-2" required>
+                    </div>
+                    <div>
+                        <label for="issue-to" class="block text-gray-700">ISSUE_TO</label>
+                        <input type="text" id="issue-to" class="w-full border px-3 py-2" required>
+                    </div>
+                    <div>
+                        <label for="issue-date" class="block text-gray-700">ISSUE_DATE</label>
+                        <input type="text" id="issue-date" class="w-full border px-3 py-2" readonly>
+                    </div>
+                    <div>
+                        <label for="stock-project" class="block text-gray-700">STOCK_PROJECT</label>
+                        <input type="text" id="stock-project" class="w-full border px-3 py-2" readonly>
+                    </div>
+                    <div>
+                        <label for="item-code" class="block text-gray-700">ITEM_CODE</label>
+                        <input type="text" id="item-code" class="w-full border px-3 py-2" readonly>
+                    </div>
+                    <div>
+                        <label for="user-comment" class="block text-gray-700">USER COMMENT</label>
+                        <select id="user-comment" class="w-full border px-3 py-2">
+                            <option value="Starting Material">Starting Material</option>
+                            <option value="Intermediate">Intermediate</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="issue-qty" class="block text-gray-700">ISSUE_QTY</label>
+                        <input type="number" id="issue-qty" class="w-full border px-3 py-2" readonly>
+                    </div>
+                    <div>
+                        <label for="consumed-qty" class="block text-gray-700">CONSUMED_QTY</label>
+                        <input type="number" id="consumed-qty" class="w-full border px-3 py-2" onchange="calculateAvailableQuantity()">
+                    </div>
+                    <div>
+                        <label for="avl-qty" class="block text-gray-700">AVL_QTY</label>
+                        <input type="number" id="avl-qty" class="w-full border px-3 py-2" readonly>
+                    </div>
+                    <div>
+                        <label for="unit" class="block text-gray-700">UNIT</label>
+                        <input type="text" id="unit" class="w-full border px-3 py-2" readonly>
+                    </div>
+                </div>
+                <button type="submit" class="bg-blue-600 text-white px-4 py-2 rounded mt-4">Issue</button>
+            </form>
+        </div>
+
+        <!-- Issue Report -->
+        <div id="issue-report-section" class="hidden">
+    <h2 class="text-2xl font-bold mb-6">Issue Report</h2>
+<div class="mb-4 flex items-center">
+    <label for="issue-search-category" class="mr-2 font-semibold">Search By</label>
+    <select id="issue-search-category" class="w-1/4 border px-3 py-2">
+        <option value="BAR_CODE">BAR_CODE</option>
+        <option value="EMP_ID">EMP_ID</option>
+        <option value="CAS_ID">CAS_ID</option>
+        <option value="CHEMICAL_NAME">CHEMICAL_NAME</option>
+    </select>
+    <input
+        type="text"
+        id="issue-search-input"
+        class="w-1/3 border px-3 py-2 ml-2"
+        placeholder="Enter Search Value"
+    >
+    <button onclick="searchIssueReport()" class="bg-blue-600 text-white px-4 py-2 rounded ml-2">
+        Search
+    </button>
+    <button onclick="resetIssueSearch()" class="bg-red-600 text-white px-4 py-2 rounded ml-2">
+        Reset
+    </button>
+</div>
+    <div class="flex items-center mb-4">
+        <label for="from-date" class="mr-2 font-semibold">From:</label>
+        <input type="date" id="from-date" class="border px-3 py-2 rounded">
+        <label for="to-date" class="mx-2 font-semibold">To:</label>
+        <input type="date" id="to-date" class="border px-3 py-2 rounded">
+        <button onclick="getFilteredIssueReport()" class="ml-4 bg-blue-600 text-white px-4 py-2 rounded">Get Report</button>
+        <button onclick="exportFilteredIssueReport()" class="ml-4 bg-green-600 text-white px-4 py-2 rounded">Export to Excel</button>
+    </div>
+    <button onclick="exportIssueReport()" class="bg-green-600 text-white px-4 py-2 rounded mt-4">Export Issue Report</button>
+    <table class="min-w-full bg-white mt-4">
+        <thead>
+        <tr>
+            <th class="py-2 px-4 border-b">BAR_CODE</th>
+            <th class="py-2 px-4 border-b">EMP_ID</th>
+            <th class="py-2 px-4 border-b">CAS_ID</th>
+            <th class="py-2 px-4 border-b">CHEMICAL_NAME</th>
+            <th class="py-2 px-4 border-b">VENDOR_NAME</th>
+            <th class="py-2 px-4 border-b">REQ_LAB_CODE</th>
+            <th class="py-2 px-4 border-b">REQ_PROJECT_CODE</th>
+            <th class="py-2 px-4 border-b">ISSUE_TO</th>
+            <th class="py-2 px-4 border-b">ISSUE_DATE</th>
+            <th class="py-2 px-4 border-b">STOCK_PROJECT</th>
+            <th class="py-2 px-4 border-b">ITEM_CODE</th>
+            <th class="py-2 px-4 border-b">USER_COMMENT</th>
+            <th class="py-2 px-4 border-b">ISSUE_QTY</th>
+            <th class="py-2 px-4 border-b">CONSUMED_QTY</th>
+            <th class="py-2 px-4 border-b">AVL_QTY</th>
+            <th class="py-2 px-4 border-b">UNIT</th>
+        </tr>
+        </thead>
+        <tbody id="filtered-issue-report-body">
+            <!-- Filtered rows dynamically added here -->
+        </tbody>
+    </table>
+</div>
+<div id="admin-panel-section" class="hidden">
+    <h2 class="text-2xl font-bold mb-6">Admin Control Panel</h2>
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Control Panel - Chemical Management System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Add custom styles if needed */
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <div class="container mx-auto p-8">
+        <h1 class="text-3xl font-bold text-center mb-8">Admin Control Panel</h1>
+        
+        <!-- User Management Section -->
+        <div class="bg-white p-6 rounded shadow-md mb-8">
+            <h2 class="text-2xl font-semibold mb-4">Manage Users</h2>
+            
+            <!-- User List Table -->
+            <table class="min-w-full table-auto mb-6">
+                <thead>
+                    <tr class="bg-blue-600 text-white">
+                        <th class="px-4 py-2">Username</th>
+                        <th class="px-4 py-2">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="user-list">
+                    <!-- User list will be populated here -->
+                </tbody>
+            </table>
+
+            <!-- Add User Form -->
+            <div class="mb-6">
+                <h3 class="text-xl font-semibold">Add New User</h3>
+                <form id="add-user-form" onsubmit="addUser(event)">
+                    <div class="mb-4">
+                        <label for="new-username" class="block text-gray-700 font-semibold mb-2">Username</label>
+                        <input type="text" id="new-username" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter username" required>
+                    </div>
+                    <div class="mb-4">
+                        <label for="new-password" class="block text-gray-700 font-semibold mb-2">Password</label>
+                        <input type="password" id="new-password" class="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Enter password" required>
+                    </div>
+                    <button type="submit" class="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700">Add User</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Logout Button -->
+        <button onclick="logout()" class="w-full bg-red-600 text-white py-2 px-4 rounded hover:bg-red-700">Logout</button>
+    </div>
+
+    <script>
+        const users = JSON.parse(localStorage.getItem('users')) || [
+            { username: 'admin', password: 'admin' } // Default admin user
+        ];
+
+        // Display users in the table
+        function displayUsers() {
+            const userList = document.getElementById('user-list');
+            userList.innerHTML = '';
+            users.forEach((user, index) => {
+                const row = document.createElement('tr');
+                row.classList.add('border-b');
+                row.innerHTML = `
+                    <td class="px-4 py-2">${user.username}</td>
+                    <td class="px-4 py-2">
+                        <button class="text-yellow-500 hover:text-yellow-700" onclick="changePassword(${index})">Change Password</button>
+                        <button class="text-red-500 hover:text-red-700 ml-4" onclick="deleteUser(${index})">Delete</button>
+                    </td>
+                `;
+                userList.appendChild(row);
+            });
+        }
+
+        // Add new user
+        function addUser(event) {
+            event.preventDefault();
+            const username = document.getElementById('new-username').value.trim();
+            const password = document.getElementById('new-password').value.trim();
+
+            // Basic validation
+            if (!username || !password) {
+                alert("Username and password cannot be empty.");
+                return;
+            }
+
+            // Check if username already exists
+            if (users.find(user => user.username === username)) {
+                alert("Username already exists!");
+                return;
+            }
+
+            // Encrypt password (using a simple hash function or a more complex approach)
+            const hashedPassword = btoa(password);  // Base64 encoding for simplicity, use proper hashing in production
+
+            users.push({ username, password: hashedPassword });
+            localStorage.setItem('users', JSON.stringify(users));
+            displayUsers(); // Refresh the user list
+            document.getElementById('add-user-form').reset();
+        }
+
+        // Delete user with confirmation
+        function deleteUser(index) {
+            if (confirm("Are you sure you want to delete this user?")) {
+                users.splice(index, 1);
+                localStorage.setItem('users', JSON.stringify(users));
+                displayUsers(); // Refresh the user list
+            }
+        }
+
+        // Change password
+        function changePassword(index) {
+            const newPassword = prompt("Enter new password:");
+            if (newPassword) {
+                users[index].password = btoa(newPassword); // Encrypt password
+                localStorage.setItem('users', JSON.stringify(users));
+                alert("Password updated successfully!");
+            }
+        }
+
+        // Logout function
+        function logout() {
+            localStorage.removeItem('loggedIn'); // Clear login session
+            window.location.href = "login.html"; // Redirect to login page
+        }
+
+        // Initial user list display
+        displayUsers();
+    </script>
+</body>
+</html>
+
+    </div>
+        <!-- Decompose Report -->
+<div id="decompose-report-section" class="hidden">
+<div class="mb-4 flex items-center">
+    <label for="decompose-search-category" class="mr-2 font-semibold">Search By</label>
+    <select id="decompose-search-category" class="w-1/4 border px-3 py-2">
+        <option value="BAR_CODE">BAR_CODE</option>
+        <option value="CAS_ID">CAS_ID</option>
+        <option value="CHEMICAL_NAME">CHEMICAL_NAME</option>
+    </select>
+    <input
+        type="text"
+        id="decompose-search-input"
+        class="w-1/3 border px-3 py-2 ml-2"
+        placeholder="Enter Search Value"
+    >
+    <button onclick="searchDecomposeReport()" class="bg-blue-600 text-white px-4 py-2 rounded ml-2">
+        Search
+    </button>
+    <button onclick="resetDecomposeSearch()" class="bg-red-600 text-white px-4 py-2 rounded ml-2">
+        Reset
+    </button>
+</div>
+                <h2 class="text-2xl font-bold mb-6">Decompose Report</h2>
+            <button onclick="exportDecomposeData()" class="bg-green-600 text-white px-4 py-2 rounded ml-2">Export to Excel</button>
+    <table class="min-w-full bg-white mt-4">  
+                <thead>
+                <tr>
+                    <th class="py-2 px-4 border-b">BAR_CODE</th>
+                    <th class="py-2 px-4 border-b">AVL_QTY</th>
+                    <th class="py-2 px-4 border-b">TARE_VAIL</th>
+                    <th class="py-2 px-4 border-b">GROSS_QTY</th>
+                    <th class="py-2 px-4 border-b">UNIT</th>
+                    <th class="py-2 px-4 border-b">CAS_ID</th>
+                    <th class="py-2 px-4 border-b">SMILES</th>
+                    <th class="py-2 px-4 border-b">PROJECT_CODE</th>
+                    <th class="py-2 px-4 border-b">LOCATION</th>
+                    <th class="py-2 px-4 border-b">VENDOR_NAME</th>
+                    <th class="py-2 px-4 border-b">LAB_CODE</th>
+                    <th class="py-2 px-4 border-b">CHEMICAL_NAME</th>
+                    <th class="py-2 px-4 border-b">ITEM_CODE</th>
+                    <th class="py-2 px-4 border-b">DECOMPOSE_COMMENT</th>
+                    <th class="py-2 px-4 border-b">DECOMPOSE_DATE</th>
+                </tr>
+                </thead>
+                <tbody id="decompose-report-body">
+                    <!-- Rows will be dynamically added here -->
+                </tbody>
+            </table>
+        </div>
+    </main>
+</div>
+
+<script>
+    // JavaScript Logic for Chemical Management System
+
+    // Navigation between sections
+    function navigate(sectionId) {
+        const sections = document.querySelectorAll('main > div');
+        sections.forEach(section => {
+            section.classList.add('hidden');
+        });
+        document.getElementById(sectionId).classList.remove('hidden');
+    }
+
+    // Handling Stock Report Upload
+    let stockData = [];
+    let decomposeData = [];
+    let issueReport = [];
+
+    function handleStockUpload() {
+        const file = document.getElementById('stock-upload').files[0];
+        const reader = new FileReader();
+
+        reader.onload = function (e) {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const sheetName = workbook.SheetNames[0];
+            const sheet = workbook.Sheets[sheetName];
+            stockData = XLSX.utils.sheet_to_json(sheet);
+            console.log('Stock Data Loaded:', stockData);
+        };
+
+        if (file) {
+            reader.readAsArrayBuffer(file);
+        }
+    }
+
+    function loadStockData() {
+        const tbody = document.getElementById('stock-report-body');
+        tbody.innerHTML = ''; // Clear existing rows
+
+        stockData.forEach((item, index) => {
+            const row = document.createElement('tr');
+
+            const values = [
+                index + 1,
+                item.BAR_CODE,
+                item.AVL_QTY,
+                item.TARE_VAIL,
+                item.GROSS_QTY,
+                item.UNIT,
+                item.CAS_ID,
+                item.SMILES,
+                item.PROJECT_CODE,
+                item.LOCATION,
+                item.VENDOR_NAME,
+                item.LAB_CODE,
+                item.CHEMICAL_NAME,
+                item.ITEM_CODE
+            ];
+
+            values.forEach(value => {
+                const cell = document.createElement('td');
+                cell.className = 'py-2 px-4 border-b';
+                cell.textContent = value;
+                row.appendChild(cell);
+            });
+
+            // Action Button: Decompose
+            const actionCell = document.createElement('td');
+            actionCell.className = 'py-2 px-4 border-b';
+            
+            const decomposeButton = document.createElement('button');
+            decomposeButton.className = 'bg-red-600 text-white px-4 py-2 rounded';
+            decomposeButton.textContent = 'Decompose';
+            
+            // Correct event handler binding
+            decomposeButton.addEventListener('click', function() {
+                handleDecompose(item, index);
+            });
+
+            actionCell.appendChild(decomposeButton);
+            row.appendChild(actionCell);
+
+            tbody.appendChild(row);
+        });
+    }
+
+    function searchStockReport() {
+        const category = document.getElementById('search-category').value;
+        const searchValue = document.getElementById('search-input').value.toLowerCase();
+
+        const filteredData = stockData.filter(item => 
+            item[category] && item[category].toString().toLowerCase().includes(searchValue)
+        );
+
+        const tbody = document.getElementById('stock-report-body');
+        tbody.innerHTML = '';
+
+        filteredData.forEach((item, index) => {
+            const row = document.createElement('tr');
+
+            const values = [
+                index + 1,
+                item.BAR_CODE,
+                item.AVL_QTY,
+                item.TARE_VAIL,
+                item.GROSS_QTY,
+                item.UNIT,
+                item.CAS_ID,
+                item.SMILES,
+                item.PROJECT_CODE,
+                item.LOCATION,
+                item.VENDOR_NAME,
+                item.LAB_CODE,
+                item.CHEMICAL_NAME,
+                item.ITEM_CODE
+            ];
+
+            values.forEach(value => {
+                const cell = document.createElement('td');
+                cell.className = 'py-2 px-4 border-b';
+                cell.textContent = value;
+                row.appendChild(cell);
+            });
+
+            // Action Button: Decompose
+            const actionCell = document.createElement('td');
+            actionCell.className = 'py-2 px-4 border-b';
+            
+            const decomposeButton = document.createElement('button');
+            decomposeButton.className = 'bg-red-600 text-white px-4 py-2 rounded';
+            decomposeButton.textContent = 'Decompose';
+            
+            // Correct event handler binding
+            decomposeButton.addEventListener('click', function() {
+                handleDecompose(item, index);
+            });
+
+            actionCell.appendChild(decomposeButton);
+            row.appendChild(actionCell);
+
+            tbody.appendChild(row);
+        });
+    }
+
+    function exportStockData() {
+        const worksheet = XLSX.utils.json_to_sheet(stockData);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Stock Report');
+
+        XLSX.writeFile(workbook, 'Stock_Report.xlsx');
+    }
+
+    function handleDecompose(item, index) {
+        const comment = prompt('Enter Decompose Comment:');
+        if (comment) {
+            item.DECOMPOSE_COMMENT = comment;
+            item.DECOMPOSE_DATE = new Date().toLocaleString('en-GB').replace(',', '') + '.00';
+                        // Save decomposed item in a separate array
+            decomposeData.push(item);
+
+            // Remove the decomposed item from the stock data
+            stockData.splice(index, 1);
+
+            // Reload stock data to reflect the changes
+            loadStockData();
+
+            // Optionally, refresh the decompose report section
+            updateDecomposeReport();
+            alert('Chemical successfully decomposed and moved to Decompose Report!');
+        }
+    }
+ function updateDecomposeReport() {
+        const tbody = document.getElementById('decompose-report-body');
+        tbody.innerHTML = '';
+
+        decomposeData.forEach((item, index) => {
+            const row = document.createElement('tr');
+            const values = [
+                item.BAR_CODE,
+                item.AVL_QTY,
+                item.TARE_VAIL,
+                item.GROSS_QTY,
+                item.UNIT,
+                item.CAS_ID,
+                item.SMILES,
+                item.PROJECT_CODE,
+                item.LOCATION,
+                item.VENDOR_NAME,
+                item.LAB_CODE,
+                item.CHEMICAL_NAME,
+                item.ITEM_CODE,
+                item.DECOMPOSE_COMMENT,
+                item.DECOMPOSE_DATE
+            ];
+
+            values.forEach(value => {
+                const cell = document.createElement('td');
+                cell.className = 'py-2 px-4 border-b';
+                cell.textContent = value;
+                row.appendChild(cell);
+            });
+
+            tbody.appendChild(row);
+        });
+    }
+
+    // Handling Chemical Issue
+    function handleIssueChemical(event) {
+    event.preventDefault(); // Prevent form submission
+
+    // Get form inputs
+    const issueData = {
+        BAR_CODE: document.getElementById('barcode').value,
+        EMP_ID: document.getElementById('emp-id').value,
+        CAS_ID: document.getElementById('cas-id').value,
+        CHEMICAL_NAME: document.getElementById('chemical-name').value,
+        VENDOR_NAME: document.getElementById('vendor-name').value,
+        REQ_LAB_CODE: document.getElementById('req-lab-code').value,
+        REQ_PROJECT_CODE: document.getElementById('req-project-code').value,
+        ISSUE_TO: document.getElementById('issue-to').value,
+        ISSUE_DATE: new Date().toISOString().slice(0, 19).replace('T', ' '), // Format as YYYY-MM-DD HH:mm:ss
+        STOCK_PROJECT: document.getElementById('stock-project').value,
+        ITEM_CODE: document.getElementById('item-code').value,
+        USER_COMMENT: document.getElementById('user-comment').value,
+        ISSUE_QTY: parseFloat(document.getElementById('issue-qty').value) || 0,
+        CONSUMED_QTY: parseFloat(document.getElementById('consumed-qty').value) || 0,
+        AVL_QTY: parseFloat(document.getElementById('avl-qty').value) || 0,
+        UNIT: document.getElementById('unit').value
+    };
+
+    // Validation
+    if (!issueData.BAR_CODE || !issueData.EMP_ID || issueData.ISSUE_QTY <= 0) {
+        alert('Please fill all required fields and ensure issue quantity is greater than zero.');
+        return;
+    }
+
+    // Add to issueReport array
+    issueReport.push(issueData);
+
+    // Update the Issue Report table
+    updateIssueReport();
+
+    // Save data to local storage
+    updateLocalStorage();
+
+    // Reset the form for the next entry
+    document.getElementById('issue-chemical-form').reset();
+
+    // Provide feedback
+    alert('Chemical successfully issued!');
+}
+
+   function updateIssueReport() {
+    const tbody = document.getElementById('filtered-issue-report-body');
+    tbody.innerHTML = ''; // Clear existing rows
+
+    issueReport.forEach((item, index) => {
+        const row = document.createElement('tr');
+        const values = [
+            item.BAR_CODE,
+            item.EMP_ID,
+            item.CAS_ID,
+            item.CHEMICAL_NAME,
+            item.VENDOR_NAME,
+            item.REQ_LAB_CODE,
+            item.REQ_PROJECT_CODE,
+            item.ISSUE_TO,
+            item.ISSUE_DATE,
+            item.STOCK_PROJECT,
+            item.ITEM_CODE,
+            item.USER_COMMENT,
+            item.ISSUE_QTY,
+            item.CONSUMED_QTY,
+            item.AVL_QTY,
+            item.UNIT
+        ];
+
+        values.forEach(value => {
+            const cell = document.createElement('td');
+            cell.className = 'py-2 px-4 border-b';
+            cell.textContent = value;
+            row.appendChild(cell);
+        });
+
+
+        // Add Action Buttons
+        const actionCell = document.createElement('td');
+        const editButton = document.createElement('button');
+        editButton.textContent = 'Edit';
+        editButton.className = 'bg-yellow-500 text-white px-3 py-2 rounded';
+        editButton.onclick = () => editIssue(index);
+
+        const deleteButton = document.createElement('button');
+        deleteButton.textContent = 'Delete';
+        deleteButton.className = 'bg-red-500 text-white px-3 py-2 rounded ml-2';
+        deleteButton.onclick = () => deleteIssue(index);
+
+        actionCell.appendChild(editButton);
+        actionCell.appendChild(deleteButton);
+        row.appendChild(actionCell);
+
+        tbody.appendChild(row);
+    });
+}
+
+// Edit and Delete Functions
+function editIssue(index) {
+    const issueData = issueReport[index];
+    // Populate form fields with issueData for editing
+}
+
+function deleteIssue(index) {
+    issueReport.splice(index, 1);
+    updateIssueReport();
+    updateLocalStorage();
+}
+
+
+    function exportIssueReport() {
+        const worksheet = XLSX.utils.json_to_sheet(issueReport);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Issue Report');
+
+        XLSX.writeFile(workbook, 'Issue_Report.xlsx');
+    }
+
+    // Helper: Populate Issue Fields Based on Barcode
+    function populateIssueFields() {
+        const barcode = document.getElementById('barcode').value;
+
+        const stockItem = stockData.find(item => item.BAR_CODE === barcode);
+
+        if (stockItem) {
+            document.getElementById('cas-id').value = stockItem.CAS_ID || '';
+            document.getElementById('chemical-name').value = stockItem.CHEMICAL_NAME || '';
+            document.getElementById('vendor-name').value = stockItem.VENDOR_NAME || '';
+            document.getElementById('stock-project').value = stockItem.PROJECT_CODE || '';
+            document.getElementById('item-code').value = stockItem.ITEM_CODE || '';
+            document.getElementById('issue-qty').value = stockItem.AVL_QTY || '';
+            document.getElementById('unit').value = stockItem.UNIT || '';
+        } else {
+            alert('No stock item found with the given barcode.');
+        }
+    }
+
+    // Helper: Calculate Available Quantity
+    function calculateAvailableQuantity() {
+        const issueQty = parseFloat(document.getElementById('issue-qty').value) || 0;
+        const consumedQty = parseFloat(document.getElementById('consumed-qty').value) || 0;
+
+        const availableQty = issueQty - consumedQty;
+
+        if (availableQty < 0) {
+            alert('Consumed quantity cannot exceed issued quantity!');
+            document.getElementById('consumed-qty').value = 0;
+        } else {
+            document.getElementById('avl-qty').value = availableQty.toFixed(2);
+        }
+    }
+function getCurrentFormattedTime() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const date = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+
+    return `${year}-${month}-${date} ${hours}:${minutes}:${seconds}.00`;
+}
+
+// Populate ISSUE_DATE when the form is loaded
+function populateIssueDate() {
+    const issueDateField = document.getElementById('issue-date');
+    if (issueDateField) {
+        issueDateField.value = getCurrentFormattedTime();
+    }
+}
+
+// Update ISSUE_DATE every second (optional, for real-time updates)
+function updateIssueDateRealtime() {
+    setInterval(() => {
+        const issueDateField = document.getElementById('issue-date');
+        if (issueDateField) {
+            issueDateField.value = getCurrentFormattedTime();
+        }
+    }, 1000); // Update every second
+}
+
+// Call populateIssueDate on page load
+document.addEventListener('DOMContentLoaded', () => {
+    populateIssueDate();
+    updateIssueDateRealtime(); // Optional: Use if you want real-time updates
+});
+
+function handleIssueChemical(event) {
+    event.preventDefault();
+
+    const issueData = {
+        BAR_CODE: document.getElementById('barcode').value,
+        EMP_ID: document.getElementById('emp-id').value,
+        CAS_ID: document.getElementById('cas-id').value,
+        CHEMICAL_NAME: document.getElementById('chemical-name').value,
+        VENDOR_NAME: document.getElementById('vendor-name').value,
+        REQ_LAB_CODE: document.getElementById('req-lab-code').value,
+        REQ_PROJECT_CODE: document.getElementById('req-project-code').value,
+        ISSUE_TO: document.getElementById('issue-to').value,
+        ISSUE_DATE: document.getElementById('issue-date').value, // Use the updated field value
+        STOCK_PROJECT: document.getElementById('stock-project').value,
+        ITEM_CODE: document.getElementById('item-code').value,
+        USER_COMMENT: document.getElementById('user-comment').value,
+        ISSUE_QTY: parseFloat(document.getElementById('issue-qty').value),
+        CONSUMED_QTY: parseFloat(document.getElementById('consumed-qty').value),
+        AVL_QTY: parseFloat(document.getElementById('avl-qty').value),
+        UNIT: document.getElementById('unit').value
+    };
+
+    issueReport.push(issueData);
+
+    // Update Issue Report Table
+    updateIssueReport();
+
+    // Reset the form after submission
+    document.getElementById('issue-chemical-form').reset();
+    populateIssueDate(); // Repopulate ISSUE_DATE for the next entry
+
+    alert('Chemical successfully issued!');
+}
+function paginateData(data, page, pageSize) {
+    const start = (page - 1) * pageSize;
+    const end = start + pageSize;
+    return data.slice(start, end);
+}
+
+function renderPaginationButtons(totalItems, pageSize, containerId, onPageChange) {
+    const container = document.getElementById(containerId);
+    container.innerHTML = '';
+    const totalPages = Math.ceil(totalItems / pageSize);
+
+    for (let i = 1; i <= totalPages; i++) {
+        const button = document.createElement('button');
+        button.textContent = i;
+        button.className = 'px-3 py-2 bg-blue-500 text-white rounded';
+        button.onclick = () => onPageChange(i);
+        container.appendChild(button);
+    }
+}
+
+// Example usage for stock report:
+function renderStockPage(page) {
+    const pageData = paginateData(stockData, page, 10); // 10 items per page
+    // Render table rows using pageData
+}
+
+renderPaginationButtons(stockData.length, 10, 'pagination-stock', renderStockPage);
+function exportFilteredIssueReport() {
+    const fromDate = new Date(document.getElementById('from-date').value);
+    const toDate = new Date(document.getElementById('to-date').value);
+
+    const filteredData = issueReport.filter(item => {
+        const issueDate = new Date(item.ISSUE_DATE);
+        return issueDate >= fromDate && issueDate <= toDate;
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(filteredData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Filtered Issue Report');
+    XLSX.writeFile(workbook, 'Filtered_Issue_Report.xlsx');
+}
+function exportDecomposeData() {
+        const worksheet = XLSX.utils.json_to_sheet(stockData);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Decompose Report');
+
+        XLSX.writeFile(workbook, 'Decompose_Report.xlsx');
+    }
+let filteredIssueData = []; // Global variable to store filtered data
+
+function getFilteredIssueReport() {
+    const fromDateValue = document.getElementById('from-date').value;
+    const toDateValue = document.getElementById('to-date').value;
+
+    if (!fromDateValue || !toDateValue) {
+        alert('Please select both From and To dates.');
+        return;
+    }
+
+    const fromDate = new Date(fromDateValue);
+    const toDate = new Date(toDateValue);
+
+    // Validate date range
+    if (fromDate > toDate) {
+        alert('From date cannot be later than To date.');
+        return;
+    }
+
+    // Filter issueReport by date range
+    filteredIssueData = issueReport.filter(item => {
+        const issueDate = new Date(item.ISSUE_DATE);
+        return issueDate >= fromDate && issueDate <= toDate;
+    });
+
+    const tbody = document.getElementById('filtered-issue-report-body');
+    tbody.innerHTML = ''; // Clear existing rows
+
+    if (filteredIssueData.length === 0) {
+        // Show "No Records Found" message if no data matches
+        const row = document.createElement('tr');
+        const cell = document.createElement('td');
+        cell.colSpan = 16; // Match colspan to table columns
+        cell.className = 'py-4 px-4 text-center text-gray-500';
+        cell.textContent = 'No Records Found';
+        row.appendChild(cell);
+        tbody.appendChild(row);
+    } else {
+        // Populate table with filtered data
+        filteredIssueData.forEach(item => {
+            const row = document.createElement('tr');
+            const values = [
+                item.BAR_CODE,
+                item.EMP_ID,
+                item.CAS_ID,
+                item.CHEMICAL_NAME,
+                item.VENDOR_NAME,
+                item.REQ_LAB_CODE,
+                item.REQ_PROJECT_CODE,
+                item.ISSUE_TO,
+                item.ISSUE_DATE,
+                item.STOCK_PROJECT,
+                item.ITEM_CODE,
+                item.USER_COMMENT,
+                item.ISSUE_QTY,
+                item.CONSUMED_QTY,
+                item.AVL_QTY,
+                item.UNIT
+            ];
+
+            values.forEach(value => {
+                const cell = document.createElement('td');
+                cell.className = 'py-2 px-4 border-b';
+                cell.textContent = value;
+                row.appendChild(cell);
+            });
+
+            tbody.appendChild(row);
+        });
+    }
+}
+function exportFilteredIssueReport() {
+    if (!filteredIssueData || filteredIssueData.length === 0) {
+        alert('No data available to export. Please generate a report first.');
+        return;
+    }
+
+    // Create an Excel sheet from filtered data
+    const worksheet = XLSX.utils.json_to_sheet(filteredIssueData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Filtered Issue Report');
+    XLSX.writeFile(workbook, 'Filtered_Issue_Report.xlsx');
+}
+function resetStockSearch() {
+    // Clear search input
+    document.getElementById('search-input').value = '';
+
+    // Reload all stock data
+    loadStockData();
+}
+let uploadedEmployeeData = []; // Temporary array to store uploaded data
+
+function prepareEmployeeUpload() {
+    const file = document.getElementById('employee-upload').files[0];
+    const reader = new FileReader();
+
+    reader.onload = function (e) {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        uploadedEmployeeData = XLSX.utils.sheet_to_json(sheet); // Store data temporarily
+
+        if (uploadedEmployeeData.length > 0) {
+            alert('Data ready for submission. Click "Submit Uploaded Data" to add.');
+        } else {
+            alert('No valid data found in the uploaded file.');
+        }
+    };
+
+    if (file) {
+        reader.readAsArrayBuffer(file);
+    } else {
+        alert('Please upload a valid Excel file.');
+    }
+}
+// Call this function when the page loads
+document.addEventListener('DOMContentLoaded', loadFromLocalStorage);
+ function logout() {
+            window.location.href = "login.html"; // Redirect to the login page
+        }
+document.addEventListener("DOMContentLoaded", () => {
+    const storedUsers = JSON.parse(localStorage.getItem("userList")) || [];
+    if (storedUsers.length === 0) {
+        localStorage.setItem("userList", JSON.stringify([{ id: "214346", role: "admin" }])); // Default admin
+    }
+    updateUserList(); // Refresh user list on page load
+});
+function addUser() {
+    const userId = document.getElementById("user-id-input").value.trim();
+    const userRole = document.getElementById("user-role-input").value;
+
+    if (!userId) {
+        alert("User ID is required!");
+        return;
+    }
+
+    const userList = JSON.parse(localStorage.getItem("userList")) || [];
+    const userExists = userList.some(user => user.id === userId);
+    if (userExists) {
+        alert("User ID already exists!");
+        return;
+    }
+
+    userList.push({ id: userId, role: userRole });
+    localStorage.setItem("userList", JSON.stringify(userList)); // Save updated user list to local storage
+    updateUserList(); // Refresh the User List table
+    alert("User added successfully!");
+
+    // Clear input fields
+    document.getElementById("user-id-input").value = "";
+}
+function updateUserList() {
+    const userList = JSON.parse(localStorage.getItem("userList")) || [];
+    const tbody = document.getElementById("user-list-body");
+    tbody.innerHTML = ""; // Clear existing rows
+
+    if (userList.length === 0) {
+        const row = document.createElement("tr");
+        const cell = document.createElement("td");
+        cell.colSpan = 3; // Adjust colspan based on the number of columns
+        cell.className = "py-4 px-4 text-center text-gray-500";
+        cell.textContent = "No Users Found";
+        row.appendChild(cell);
+        tbody.appendChild(row);
+        return;
+    }
+
+    userList.forEach((user, index) => {
+        const row = document.createElement("tr");
+
+        const userIdCell = document.createElement("td");
+        userIdCell.className = "py-2 px-4 border-b";
+        userIdCell.textContent = user.id;
+
+        const roleCell = document.createElement("td");
+        roleCell.className = "py-2 px-4 border-b";
+        roleCell.textContent = user.role;
+
+        const actionCell = document.createElement("td");
+        actionCell.className = "py-2 px-4 border-b text-center";
+
+        const deleteButton = document.createElement("button");
+        deleteButton.textContent = "Delete";
+        deleteButton.className = "bg-red-500 text-white px-3 py-1 rounded";
+        deleteButton.onclick = () => {
+            userList.splice(index, 1); // Remove user
+            localStorage.setItem("userList", JSON.stringify(userList)); // Update local storage
+            updateUserList(); // Refresh the table
+        };
+
+        actionCell.appendChild(deleteButton);
+        row.appendChild(userIdCell);
+        row.appendChild(roleCell);
+        row.appendChild(actionCell);
+        tbody.appendChild(row);
+    });
+}
+function searchDecomposeReport() {
+    const category = document.getElementById('decompose-search-category').value;
+    const searchValue = document.getElementById('decompose-search-input').value.trim().toLowerCase();
+
+    const filteredData = decomposeData.filter(item =>
+        item[category] && item[category].toString().trim().toLowerCase().includes(searchValue)
+    );
+
+    const tbody = document.getElementById('decompose-report-body');
+    tbody.innerHTML = ''; // Clear previous results
+
+    if (filteredData.length === 0) {
+        const row = document.createElement('tr');
+        const cell = document.createElement('td');
+        cell.colSpan = 15; // Adjust colspan based on columns
+        cell.className = 'py-4 px-4 text-center text-gray-500';
+        cell.textContent = 'No matching records found.';
+        row.appendChild(cell);
+        tbody.appendChild(row);
+    } else {
+        filteredData.forEach(item => {
+            const row = document.createElement('tr');
+            const values = [
+                item.BAR_CODE,
+                item.AVL_QTY,
+                item.TARE_VAIL,
+                item.GROSS_QTY,
+                item.UNIT,
+                item.CAS_ID,
+                item.SMILES,
+                item.PROJECT_CODE,
+                item.LOCATION,
+                item.VENDOR_NAME,
+                item.LAB_CODE,
+                item.CHEMICAL_NAME,
+                item.ITEM_CODE,
+                item.DECOMPOSE_COMMENT,
+                item.DECOMPOSE_DATE,
+            ];
+
+            values.forEach(value => {
+                const cell = document.createElement('td');
+                cell.className = 'py-2 px-4 border-b';
+                cell.textContent = value;
+                row.appendChild(cell);
+            });
+
+            tbody.appendChild(row);
+        });
+    }
+}
+
+function resetDecomposeSearch() {
+    document.getElementById('decompose-search-input').value = ''; // Clear search input
+    loadDecomposeData(); // Reload the full decompose report
+}
+function searchIssueReport() {
+    const category = document.getElementById('issue-search-category').value;
+    const searchValue = document.getElementById('issue-search-input').value.trim().toLowerCase();
+
+    const filteredData = issueReport.filter(item =>
+        item[category] && item[category].toString().trim().toLowerCase().includes(searchValue)
+    );
+
+    const tbody = document.getElementById('filtered-issue-report-body');
+    tbody.innerHTML = ''; // Clear previous results
+
+    if (filteredData.length === 0) {
+        const row = document.createElement('tr');
+        const cell = document.createElement('td');
+        cell.colSpan = 16; // Adjust colspan based on columns
+        cell.className = 'py-4 px-4 text-center text-gray-500';
+        cell.textContent = 'No matching records found.';
+        row.appendChild(cell);
+        tbody.appendChild(row);
+    } else {
+        filteredData.forEach(item => {
+            const row = document.createElement('tr');
+            const values = [
+                item.BAR_CODE,
+                item.EMP_ID,
+                item.CAS_ID,
+                item.CHEMICAL_NAME,
+                item.VENDOR_NAME,
+                item.REQ_LAB_CODE,
+                item.REQ_PROJECT_CODE,
+                item.ISSUE_TO,
+                item.ISSUE_DATE,
+                item.STOCK_PROJECT,
+                item.ITEM_CODE,
+                item.USER_COMMENT,
+                item.ISSUE_QTY,
+                item.CONSUMED_QTY,
+                item.AVL_QTY,
+                item.UNIT,
+            ];
+
+            values.forEach(value => {
+                const cell = document.createElement('td');
+                cell.className = 'py-2 px-4 border-b';
+                cell.textContent = value;
+                row.appendChild(cell);
+            });
+
+            tbody.appendChild(row);
+        });
+    }
+}
+
+function resetIssueSearch() {
+    document.getElementById('issue-search-input').value = ''; // Clear search input
+    updateIssueReport(); // Reload the full issue report
+}
+function loadDecomposeData() {
+    const tbody = document.getElementById('decompose-report-body');
+    tbody.innerHTML = ''; // Clear existing rows
+
+    if (decomposeData.length === 0) {
+        const row = document.createElement('tr');
+        const cell = document.createElement('td');
+        cell.colSpan = 15; // Match the number of columns in the table
+        cell.className = 'py-4 px-4 text-center text-gray-500';
+        cell.textContent = 'No Records Found';
+        row.appendChild(cell);
+        tbody.appendChild(row);
+        return;
+    }
+
+    decomposeData.forEach(item => {
+        const row = document.createElement('tr');
+        const values = [
+            item.BAR_CODE,
+            item.AVL_QTY,
+            item.TARE_VAIL,
+            item.GROSS_QTY,
+            item.UNIT,
+            item.CAS_ID,
+            item.SMILES,
+            item.PROJECT_CODE,
+            item.LOCATION,
+            item.VENDOR_NAME,
+            item.LAB_CODE,
+            item.CHEMICAL_NAME,
+            item.ITEM_CODE,
+            item.DECOMPOSE_COMMENT,
+            item.DECOMPOSE_DATE,
+        ];
+
+        values.forEach(value => {
+            const cell = document.createElement('td');
+            cell.className = 'py-2 px-4 border-b';
+            cell.textContent = value;
+            row.appendChild(cell);
+        });
+
+        tbody.appendChild(row);
+    });
+}
+
+</script>
+</body>
+</html>
