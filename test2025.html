@@ -38,6 +38,33 @@
 
     <!-- Main Content -->
     <main class="ml-64 p-8">
+        <!-- Dashboard -->
+       <div id="Dashboard-section" class="hidden">
+	<div id="dashboard" class="p-8">
+    <h2 class="text-3xl font-bold mb-6">Dashboard</h2>
+
+    <!-- Counters -->
+    <div class="grid grid-cols-3 gap-4 mb-8">
+        <div class="bg-blue-100 p-4 rounded shadow">
+            <h3 class="text-xl font-bold text-blue-600">Total Chemicals</h3>
+            <p id="total-chemicals" class="text-2xl font-semibold">0</p>
+        </div>
+        <div class="bg-green-100 p-4 rounded shadow">
+            <h3 class="text-xl font-bold text-green-600">Issued Chemicals</h3>
+            <p id="issued-chemicals" class="text-2xl font-semibold">0</p>
+        </div>
+        <div class="bg-red-100 p-4 rounded shadow">
+            <h3 class="text-xl font-bold text-red-600">Decomposed Chemicals</h3>
+            <p id="decomposed-chemicals" class="text-2xl font-semibold">0</p>
+        </div>
+    </div>
+
+    <!-- Graph -->
+    <div>
+        <canvas id="chemical-chart" width="400" height="200"></canvas>
+    </div>
+</div>
+</div>
         <!-- Stock Report -->
         <div id="stock-report-section" class="hidden">
     <h2 class="text-2xl font-bold mb-6">Stock Report</h2>
@@ -283,58 +310,87 @@
 
         // Display users in the table
         function displayUsers() {
-            const userList = document.getElementById('user-list');
-            userList.innerHTML = '';
-            users.forEach((user, index) => {
-                const row = document.createElement('tr');
-                row.classList.add('border-b');
-                row.innerHTML = `
-                    <td class="px-4 py-2">${user.username}</td>
-                    <td class="px-4 py-2">
-                        <button class="text-yellow-500 hover:text-yellow-700" onclick="changePassword(${index})">Change Password</button>
-                        <button class="text-red-500 hover:text-red-700 ml-4" onclick="deleteUser(${index})">Delete</button>
-                    </td>
-                `;
-                userList.appendChild(row);
-            });
-        }
+    const users = JSON.parse(localStorage.getItem('users')) || [];
+    const userList = document.getElementById('user-list');
+    userList.innerHTML = '';
+
+    if (users.length === 0) {
+        userList.innerHTML = '<tr><td colspan="2" class="text-center">No users found.</td></tr>';
+        return;
+    }
+
+    users.forEach((user, index) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${user.username}</td>
+            <td>
+                <button onclick="deleteUser(${index})" class="text-red-600">Delete</button>
+            </td>
+        `;
+        userList.appendChild(row);
+    });
+}
 
         // Add new user
-        function addUser(event) {
-            event.preventDefault();
-            const username = document.getElementById('new-username').value.trim();
-            const password = document.getElementById('new-password').value.trim();
+        // Save new users to localStorage when added
+function addUser(event) {
+    event.preventDefault();
 
-            // Basic validation
-            if (!username || !password) {
-                alert("Username and password cannot be empty.");
-                return;
-            }
+    const username = document.getElementById('new-username').value.trim();
+    const password = document.getElementById('new-password').value.trim();
 
-            // Check if username already exists
-            if (users.find(user => user.username === username)) {
-                alert("Username already exists!");
-                return;
-            }
+    if (!username || !password) {
+        alert("Both username and password are required!");
+        return;
+    }
 
-            // Encrypt password (using a simple hash function or a more complex approach)
-            const hashedPassword = btoa(password);  // Base64 encoding for simplicity, use proper hashing in production
+    // Fetch users from localStorage or initialize an empty array
+    const users = JSON.parse(localStorage.getItem('users')) || [];
 
-            users.push({ username, password: hashedPassword });
-            localStorage.setItem('users', JSON.stringify(users));
-            displayUsers(); // Refresh the user list
-            document.getElementById('add-user-form').reset();
-        }
+    // Check if the username already exists
+    if (users.some(user => user.username === username)) {
+        alert("Username already exists!");
+        return;
+    }
 
-        // Delete user with confirmation
-        function deleteUser(index) {
-            if (confirm("Are you sure you want to delete this user?")) {
-                users.splice(index, 1);
-                localStorage.setItem('users', JSON.stringify(users));
-                displayUsers(); // Refresh the user list
-            }
-        }
+    // Add the new user
+    users.push({ username, password });
+    localStorage.setItem('users', JSON.stringify(users)); // Save to localStorage
 
+    alert("User added successfully!");
+    displayUsers(); // Refresh the user list
+    document.getElementById('add-user-form').reset(); // Reset form
+}
+
+// Delete a user
+function deleteUser(index) {
+    const users = JSON.parse(localStorage.getItem('users')) || [];
+    users.splice(index, 1);
+    localStorage.setItem('users', JSON.stringify(users)); // Save updated user list
+    displayUsers(); // Refresh the user list
+}
+// Load users from localStorage when displaying
+function displayUsers() {
+    const users = JSON.parse(localStorage.getItem('users')) || [];
+    const userList = document.getElementById('user-list');
+    userList.innerHTML = '';
+
+    if (users.length === 0) {
+        userList.innerHTML = '<tr><td colspan="2" class="text-center">No users found.</td></tr>';
+        return;
+    }
+
+    users.forEach((user, index) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${user.username}</td>
+            <td>
+                <button onclick="deleteUser(${index})" class="text-red-600">Delete</button>
+            </td>
+        `;
+        userList.appendChild(row);
+    });
+}
         // Change password
         function changePassword(index) {
             const newPassword = prompt("Enter new password:");
@@ -348,7 +404,7 @@
         // Logout function
         function logout() {
             localStorage.removeItem('loggedIn'); // Clear login session
-            window.location.href = "login.html"; // Redirect to login page
+            window.location.href = "index.html"; // Redirect to login page
         }
 
         // Initial user list display
@@ -428,22 +484,27 @@
     let issueReport = [];
 
     function handleStockUpload() {
-        const file = document.getElementById('stock-upload').files[0];
-        const reader = new FileReader();
+    const file = document.getElementById('stock-upload').files[0];
+    const reader = new FileReader();
 
-        reader.onload = function (e) {
-            const data = new Uint8Array(e.target.result);
-            const workbook = XLSX.read(data, { type: 'array' });
-            const sheetName = workbook.SheetNames[0];
-            const sheet = workbook.Sheets[sheetName];
-            stockData = XLSX.utils.sheet_to_json(sheet);
-            console.log('Stock Data Loaded:', stockData);
-        };
+    reader.onload = function (e) {
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data, { type: 'array' });
+        const sheetName = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[sheetName];
+        const stockData = XLSX.utils.sheet_to_json(sheet);
 
-        if (file) {
-            reader.readAsArrayBuffer(file);
-        }
+        // Save stock data to localStorage
+        localStorage.setItem('stockData', JSON.stringify(stockData));
+
+        alert('Stock Data Uploaded!');
+        updateDashboard(); // Refresh dashboard
+    };
+
+    if (file) {
+        reader.readAsArrayBuffer(file);
     }
+}
 
     function loadStockData() {
         const tbody = document.getElementById('stock-report-body');
@@ -579,6 +640,7 @@
             // Optionally, refresh the decompose report section
             updateDecomposeReport();
             alert('Chemical successfully decomposed and moved to Decompose Report!');
+ updateDashboard();
         }
     }
  function updateDecomposeReport() {
@@ -639,7 +701,7 @@
         AVL_QTY: parseFloat(document.getElementById('avl-qty').value) || 0,
         UNIT: document.getElementById('unit').value
     };
-
+updateDashboard();
     // Validation
     if (!issueData.BAR_CODE || !issueData.EMP_ID || issueData.ISSUE_QTY <= 0) {
         alert('Please fill all required fields and ensure issue quantity is greater than zero.');
@@ -1006,7 +1068,7 @@ function prepareEmployeeUpload() {
 // Call this function when the page loads
 document.addEventListener('DOMContentLoaded', loadFromLocalStorage);
  function logout() {
-            window.location.href = "login.html"; // Redirect to the login page
+            window.location.href = "index.html"; // Redirect to the login page
         }
 document.addEventListener("DOMContentLoaded", () => {
     const storedUsers = JSON.parse(localStorage.getItem("userList")) || [];
@@ -1015,29 +1077,33 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     updateUserList(); // Refresh user list on page load
 });
-function addUser() {
-    const userId = document.getElementById("user-id-input").value.trim();
-    const userRole = document.getElementById("user-role-input").value;
+function addUser(event) {
+    event.preventDefault(); // Prevent form submission from reloading the page
 
-    if (!userId) {
-        alert("User ID is required!");
+    const username = document.getElementById('new-username').value.trim();
+    const password = document.getElementById('new-password').value.trim();
+
+    if (!username || !password) {
+        alert("Both username and password are required!");
         return;
     }
 
-    const userList = JSON.parse(localStorage.getItem("userList")) || [];
-    const userExists = userList.some(user => user.id === userId);
-    if (userExists) {
-        alert("User ID already exists!");
+    // Fetch existing users or initialize with an empty array
+    const users = JSON.parse(localStorage.getItem('users')) || [];
+
+    // Check if the username already exists
+    if (users.some(user => user.username === username)) {
+        alert("Username already exists!");
         return;
     }
 
-    userList.push({ id: userId, role: userRole });
-    localStorage.setItem("userList", JSON.stringify(userList)); // Save updated user list to local storage
-    updateUserList(); // Refresh the User List table
+    // Add the new user
+    users.push({ username, password });
+    localStorage.setItem('users', JSON.stringify(users)); // Save to localStorage
+
     alert("User added successfully!");
-
-    // Clear input fields
-    document.getElementById("user-id-input").value = "";
+    displayUsers(); // Refresh user list
+    document.getElementById('add-user-form').reset(); // Clear form fields
 }
 function updateUserList() {
     const userList = JSON.parse(localStorage.getItem("userList")) || [];
@@ -1243,7 +1309,79 @@ function loadDecomposeData() {
         tbody.appendChild(row);
     });
 }
+document.addEventListener('DOMContentLoaded', () => {
+    displayUsers();
+});
+document.addEventListener('DOMContentLoaded', () => {
+    const users = JSON.parse(localStorage.getItem('users')) || [];
+    if (users.length === 0) {
+        localStorage.setItem('users', JSON.stringify([{ username: 'admin', password: 'admin' }]));
+    }
+});
+// Global variables for tracking counts
+let totalChemicals = 0;
+let issuedChemicals = 0;
+let decomposedChemicals = 0;
 
+// Chart instance
+let chemicalChart;
+
+// Function to update dashboard counters and graph
+function updateDashboard() {
+    const stockData = JSON.parse(localStorage.getItem('stockData')) || [];
+    const issueReport = JSON.parse(localStorage.getItem('issueReport')) || [];
+    const decomposeData = JSON.parse(localStorage.getItem('decomposeData')) || [];
+
+    totalChemicals = stockData.length;
+    issuedChemicals = issueReport.length;
+    decomposedChemicals = decomposeData.length;
+
+    // Update counters
+    document.getElementById('total-chemicals').textContent = totalChemicals;
+    document.getElementById('issued-chemicals').textContent = issuedChemicals;
+    document.getElementById('decomposed-chemicals').textContent = decomposedChemicals;
+
+    // Update graph
+    updateGraph();
+}
+
+// Function to initialize and update the graph
+function updateGraph() {
+    const ctx = document.getElementById('chemical-chart').getContext('2d');
+
+    const data = {
+        labels: ['Total', 'Issued', 'Decomposed'],
+        datasets: [{
+            label: 'Chemical Data',
+            data: [totalChemicals, issuedChemicals, decomposedChemicals],
+            backgroundColor: ['#3B82F6', '#10B981', '#EF4444']
+        }]
+    };
+
+    const config = {
+        type: 'bar',
+        data: data,
+        options: {
+            responsive: true,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    };
+
+    // Destroy previous chart instance if it exists
+    if (chemicalChart) {
+        chemicalChart.destroy();
+    }
+
+    chemicalChart = new Chart(ctx, config);
+}
+
+// Call updateDashboard on page load
+document.addEventListener('DOMContentLoaded', updateDashboard);
 </script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </body>
 </html>
