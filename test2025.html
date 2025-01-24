@@ -44,39 +44,18 @@
     <input type="file" id="stock-upload" class="mb-4 block" accept=".xlsx, .xls" onchange="handleStockUpload()">
     <button onclick="loadStockData()" class="bg-blue-600 text-white px-4 py-2 rounded mb-4">Submit</button>
 
-    <div class="mb-4 flex flex-wrap items-center gap-4">
-    <label for="search-category" class="font-semibold">Search By</label>
-    <select id="search-category" class="border px-3 py-2">
-        <option value="CAS_ID">CAS_ID</option>
-        <option value="BAR_CODE">BAR_CODE</option>
-        <option value="PROJECT_CODE">PROJECT_CODE</option>
-    </select>
-    <input
-        type="text"
-        id="search-input"
-        class="border px-3 py-2"
-        placeholder="Enter Search Value"
-    >
-    <button
-        onclick="searchStockReport()"
-        class="bg-blue-600 text-white px-4 py-2 rounded"
-    >
-        Search
-    </button>
-    <button
-        onclick="resetStockSearch()"
-        class="bg-red-600 text-white px-4 py-2 rounded"
-    >
-        Reset
-    </button>
-    <button
-        onclick="exportStockData()"
-        class="bg-green-600 text-white px-4 py-2 rounded"
-    >
-        Export
-    </button>
-</div>
-
+    <div class="mb-4 flex items-center">
+        <label for="search-category" class="mr-2 font-semibold">Search By</label>
+        <select id="search-category" class="w-1/4 border px-3 py-2">
+            <option value="CAS_ID">CAS_ID</option>
+            <option value="BAR_CODE">BAR_CODE</option>
+            <option value="PROJECT_CODE">PROJECT_CODE</option>
+        </select>
+        <input type="text" id="search-input" class="w-1/3 border px-3 py-2 ml-2" placeholder="Enter Search Value">
+        <button onclick="searchStockReport()" class="bg-blue-600 text-white px-4 py-2 rounded ml-2">Search</button>
+        <button onclick="resetStockSearch()" class="bg-red-600 text-white px-4 py-2 rounded ml-2">Reset</button>
+        <button onclick="exportStockData()" class="bg-green-600 text-white px-4 py-2 rounded ml-2">Export</button>
+    </div>
 
     <table class="min-w-full bg-white">
         <thead>
@@ -1306,127 +1285,7 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('users', JSON.stringify([{ username: 'admin', password: 'admin' }]));
     }
 });
-<script>
-    let stockData = []; // Global variable to store stock data
 
-    // Handle file upload
-    function handleStockUpload() {
-        const file = document.getElementById('stock-upload').files[0];
-        const reader = new FileReader();
-
-        reader.onload = function (e) {
-            const data = new Uint8Array(e.target.result);
-            const workbook = XLSX.read(data, { type: 'array' });
-            const sheetName = workbook.SheetNames[0];
-            const sheet = workbook.Sheets[sheetName];
-            stockData = XLSX.utils.sheet_to_json(sheet); // Convert to JSON
-            loadStockData(); // Populate the table
-        };
-
-        if (file) {
-            reader.readAsArrayBuffer(file);
-        } else {
-            alert("Please upload a valid Excel file.");
-        }
-    }
-
-    // Populate table with stock data
-    function loadStockData() {
-        const tbody = document.getElementById('stock-report-body');
-        tbody.innerHTML = ''; // Clear existing rows
-
-        stockData.forEach((item, index) => {
-            const row = document.createElement('tr');
-            const values = [
-                index + 1, // SR NO
-                item.BAR_CODE,
-                item.AVL_QTY,
-                item.TARE_VAIL,
-                item.GROSS_QTY,
-                item.UNIT,
-                item.CAS_ID,
-                item.SMILES,
-                item.PROJECT_CODE,
-                item.LOCATION,
-                item.VENDOR_NAME,
-                item.LAB_CODE,
-                item.CHEMICAL_NAME,
-                item.ITEM_CODE,
-            ];
-
-            values.forEach(value => {
-                const cell = document.createElement('td');
-                cell.className = 'py-2 px-4 border-b';
-                cell.textContent = value || ''; // Handle empty values
-                row.appendChild(cell);
-            });
-
-            // Add action buttons
-            const actionCell = document.createElement('td');
-            actionCell.className = 'py-2 px-4 border-b';
-            actionCell.innerHTML = `<button class="bg-red-600 text-white px-4 py-2 rounded">Decompose</button>`;
-            row.appendChild(actionCell);
-
-            tbody.appendChild(row);
-        });
-    }
-
-    // Search by selected category
-    function searchStockReport() {
-        const category = document.getElementById('search-category').value;
-        const searchValue = document.getElementById('search-input').value.toLowerCase();
-
-        const filteredData = stockData.filter(item =>
-            item[category] && item[category].toString().toLowerCase().includes(searchValue)
-        );
-
-        const tbody = document.getElementById('stock-report-body');
-        tbody.innerHTML = ''; // Clear existing rows
-
-        filteredData.forEach((item, index) => {
-            const row = document.createElement('tr');
-            const values = [
-                index + 1,
-                item.BAR_CODE,
-                item.AVL_QTY,
-                item.TARE_VAIL,
-                item.GROSS_QTY,
-                item.UNIT,
-                item.CAS_ID,
-                item.SMILES,
-                item.PROJECT_CODE,
-                item.LOCATION,
-                item.VENDOR_NAME,
-                item.LAB_CODE,
-                item.CHEMICAL_NAME,
-                item.ITEM_CODE,
-            ];
-
-            values.forEach(value => {
-                const cell = document.createElement('td');
-                cell.className = 'py-2 px-4 border-b';
-                cell.textContent = value || '';
-                row.appendChild(cell);
-            });
-
-            tbody.appendChild(row);
-        });
-    }
-
-    // Reset the search and reload all data
-    function resetStockSearch() {
-        document.getElementById('search-input').value = ''; // Clear search input
-        loadStockData(); // Reload all data
-    }
-
-    // Export stock data to Excel
-    function exportStockData() {
-        const worksheet = XLSX.utils.json_to_sheet(stockData);
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, 'Stock Report');
-        XLSX.writeFile(workbook, 'Stock_Report.xlsx');
-    }
-</script>
 </script>
 </body>
 </html>
